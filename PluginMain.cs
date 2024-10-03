@@ -3,11 +3,9 @@ using System.Collections.Generic;
 using MinecraftModule;
 
 //Your namespace must match the assembly name and the filename. Do not change one without changing the other two.
-namespace MCAddonPlugin
-{
+namespace MCAddonPlugin {
     //The first class must be called PluginName
-    public class PluginMain : AMPPlugin
-    {
+    public class PluginMain : AMPPlugin {
         private readonly Settings _settings;
         private readonly ILogger log;
         private readonly IConfigSerializer _config;
@@ -22,8 +20,7 @@ namespace MCAddonPlugin
         //Warning: Do not add new features to the feature manager here, only do that in Init();
         public PluginMain(ILogger log, IConfigSerializer config, IPlatformInfo platform,
             IRunningTasksManager taskManager, IApplicationWrapper Application,
-            IPluginMessagePusher Message, IFeatureManager Features)
-        {
+            IPluginMessagePusher Message, IFeatureManager Features) {
             //These are the defaults, but other mechanisms are available.
             config.SaveMethod = PluginSaveMethod.KVP;
             config.KVPSeparator = "=";
@@ -48,13 +45,11 @@ namespace MCAddonPlugin
 
         //Your init function should not invoke any code that depends on other plugins.
         //You may expose functionality via IFeatureManager.RegisterFeature, but you cannot yet use RequestFeature.
-        public override void Init(out WebMethodsBase APIMethods)
-        {
-            APIMethods = new WebMethods(_tasks, app, log);
+        public override void Init(out WebMethodsBase APIMethods) {
+            APIMethods = new WebMethods(log, features, _settings, app);
         }
 
-        void Settings_SettingModified(object sender, SettingModifiedEventArgs e)
-        {
+        void Settings_SettingModified(object sender, SettingModifiedEventArgs e) {
             //If you need to export settings to a different application, this is where you'd do it.
         }
 
@@ -62,10 +57,7 @@ namespace MCAddonPlugin
 
         //This gets called after every plugin is loaded. From here on it's safe
         //to use code that depends on other plugins and use IFeatureManager.RequestFeature
-        public override void PostInit()
-        {
-
-        }
+        public override void PostInit() { }
 
         public override IEnumerable<SettingStore> SettingStores => Utilities.EnumerableFrom(_settings);
     }

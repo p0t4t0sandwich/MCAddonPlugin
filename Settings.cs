@@ -1,34 +1,20 @@
-﻿using ModuleShared;
+﻿using MinecraftModule;
+using ModuleShared;
 
-namespace MCAddonPlugin
-{
-    public class Settings : SettingStore
-    {
-        public enum SomeEnum
-        {
-            Foo,
-            Bar,
-            Baz,
-            [EnumDisplayName("Cheese Burger")]
-            Cheese_Burger
+namespace MCAddonPlugin {
+    public class Settings : SettingStore {
+        public class MCAddonSettings : SettingSectionStore {
+            [WebSetting("Server Type", "The server type or modloader to use", false)]
+            [InlineAction("MCAddonPlugin", "SetServerInfo", "Setup Server")]
+            public MCConfig.ServerType ServerType = MCConfig.ServerType.Forge;
+
+            [WebSetting("Minecraft Version", "The version of Minecraft to use", false)]
+            public MinecraftVersion MinecraftVersion = MinecraftVersion.V1_20_2;
+
+            [WebSetting("Delete World Folder", "Delete the world folder when setting up the server", false)]
+            public bool DelWorldFolder = false;
         }
 
-
-        public class TemplateSettings : SettingSectionStore
-        {
-            [WebSetting("Message", "Some message", false)]
-            public string Setting1 = "Hello World!";
-
-            [WebSetting("Number", "Some number", false)]
-            public int Setting2 = 1234;
-
-            [WebSetting("Boolean", "Some toggle", false)]
-            public bool Setting3 = false;
-
-            [WebSetting("Enum", "Some enum", false)]
-            public SomeEnum Setting4 = SomeEnum.Bar;
-        }
-
-        public TemplateSettings MainSettings = new TemplateSettings();
+        public MCAddonSettings MainSettings = new MCAddonSettings();
     }
 }
