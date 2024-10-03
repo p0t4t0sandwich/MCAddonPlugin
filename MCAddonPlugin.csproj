@@ -1,0 +1,142 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="12.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{403140C1-55EF-4A4D-85A3-76115564B1D7}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>MCAddonPlugin</RootNamespace>
+    <AssemblyName>MCAddonPlugin</AssemblyName>
+    <TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+    <SccProjectName>SAK</SccProjectName>
+    <SccLocalPath>SAK</SccLocalPath>
+    <SccAuxPath>SAK</SccAuxPath>
+    <SccProvider>SAK</SccProvider>
+    <TargetFrameworkProfile />
+    <NuGetPackageImportStamp>
+    </NuGetPackageImportStamp>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup>
+    <RunPostBuildEvent>Always</RunPostBuildEvent>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'CI_Build|AnyCPU'">
+    <DebugSymbols>true</DebugSymbols>
+    <OutputPath>bin\CI_Build\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <DebugType>full</DebugType>
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <ErrorReport>prompt</ErrorReport>
+    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Nightly|AnyCPU'">
+    <DebugSymbols>true</DebugSymbols>
+    <OutputPath>bin\Nightly\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <DebugType>full</DebugType>
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <ErrorReport>prompt</ErrorReport>
+    <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="ModuleShared">
+      <HintPath>/home/dylan/code/ampapi/AMP_x86_64/ModuleShared.dll</HintPath>
+    </Reference>
+<!--    <Reference Include="ADSModule">-->
+<!--      <HintPath>/home/dylan/code/ampapi/AMP_x86_64/Plugins/ADSModule/ADSModule.dll</HintPath>-->
+<!--    </Reference>-->
+    <Reference Include="FileManagerPlugin">
+      <HintPath>/home/dylan/code/ampapi/AMP_x86_64/Plugins/FileManagerPlugin/FileManagerPlugin.dll</HintPath>
+    </Reference>
+    <Reference Include="MinecraftModule">
+      <HintPath>/home/dylan/code/ampapi/AMP_x86_64/Plugins/MinecraftModule/MinecraftModule.dll</HintPath>
+    </Reference>
+<!--    <Reference Include="System.ServiceModel.Http">-->
+<!--      <HintPath>/home/dylan/code/ampapi/AMP_x86_64/System.ServiceModel.Http.dll</HintPath>-->
+<!--    </Reference>-->
+    <Reference Include="Newtonsoft.Json">
+      <HintPath>/home/dylan/code/ampapi/AMP_x86_64/Newtonsoft.Json.dll</HintPath>
+    </Reference>
+    <Reference Include="System" />
+    <Reference Include="System.Core" />
+<!--    -->
+    <Reference Include="System.Net.Http" />
+<!--    -->
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="Microsoft.CSharp" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="AMPAPI.cs" />
+    <Compile Include="PluginMain.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Settings.cs" />
+    <Compile Include="WebMethods.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="DEVELOPER_README.txt" />
+    <Content Include="WebRoot\Plugin.js" />
+    <Content Include="WebRoot\SampleTab.html" />
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+    <PropertyGroup>
+      <PostBuildEvent>
+        mkdir -p /run/user/1000/gvfs/sftp:host=localhost,port=2223,user=admin/__VDS__TestServer01/Plugins/$(ProjectName)/
+        cp $(TargetPath) /run/user/1000/gvfs/sftp:host=localhost,port=2223,user=admin/__VDS__TestServer01/Plugins/$(ProjectName)/
+
+        if [ -d "./WebRoot" ]; then
+        mkdir -p /run/user/1000/gvfs/sftp:host=localhost,port=2223,user=admin/__VDS__TestServer01/Plugins/$(ProjectName)/WebRoot/
+        cp ./WebRoot/*.* /run/user/1000/gvfs/sftp:host=localhost,port=2223,user=admin/__VDS__TestServer01/Plugins/$(ProjectName)/WebRoot/
+        fi
+      </PostBuildEvent>
+    </PropertyGroup>
+  
+<!--  <PropertyGroup>-->
+<!--    <PostBuildEvent>-->
+<!--      mkdir -p /home/amp/.ampdata/instances/TestServer01/Plugins/$(ProjectName)/-->
+<!--      cp $(TargetPath) /home/amp/.ampdata/instances/TestServer01/Plugins/$(ProjectName)/-->
+
+<!--      if [ -d "./WebRoot" ]; then-->
+<!--      mkdir -p /home/amp/.ampdata/instances/TestServer01/Plugins/$(ProjectName)/WebRoot/-->
+<!--      cp ./WebRoot/*.* /home/amp/.ampdata/instances/TestServer01/Plugins/$(ProjectName)/WebRoot/-->
+<!--      fi-->
+<!--    </PostBuildEvent>-->
+<!--  </PropertyGroup>-->
+
+  <!--  <PropertyGroup>-->
+  <!--    <PostBuildEvent>xcopy "$(TargetPath)" "$(SolutionDir)GSMyAdmin\bin\$(ConfigurationName)\Plugins\$(ProjectName)\" /Y-->
+
+  <!--      IF NOT EXIST "$(TargetDir)WebRoot\" GOTO NOWEB-->
+  <!--      xcopy "$(TargetDir)WebRoot\*.*" "$(SolutionDir)GSMyAdmin\bin\$(ConfigurationName)\Plugins\$(ProjectName)\WebRoot\" /Y /E-->
+  <!--      :NOWEB</PostBuildEvent>-->
+  <!--  </PropertyGroup>-->
+
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+</Project>
