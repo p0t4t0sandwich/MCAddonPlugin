@@ -9,11 +9,14 @@
     function ProcessForm(form) {
         API.MCAddonPlugin.SetServerInfo(form.serverType.value, form.minecraftVersion.value, form.deleteWorld.checked);
     }
+    function ProcessForm2(form) {
+        API.MCAddonPlugin.AddServerInfoToQueue(form.serverType.value, form.minecraftVersion.value, form.deleteWorld.checked);
+    }
 </script>
 <script src="https://cdn.tailwindcss.com"></script>
 <iframe name="dummyframe" id="dummyframe" style="display: none;"></iframe>
 <body>
-    <div class="setup" style="width: 30%; margin: 0">
+    <div style="width: 30%; margin: 0">
         <h1>Setup Server</h1>
         <form action="javascript:;" onsubmit="ProcessForm(this)" target="dummyframe">
             <label for="serverType">Server Type</label>
@@ -22,6 +25,21 @@
             <input type="text" name="minecraftVersion" id="minecraftVersion" placeholder="Minecraft Version" />
             <label for="deleteWorld">Delete World</label>
             <input type="checkbox" name="deleteWorld" id="deleteWorld" />
+            <br>
+            <input type="submit" value="Submit" />
+        </form>
+    </div>
+    <br>
+    <br>
+    <div style="width: 30%; margin: 0">
+        <h1>Add Server Info to Queue</h1>
+        <form action="javascript:;" onsubmit="ProcessForm2(this)" target="dummyframe">
+            <label for="serverType2">Server Type</label>
+            <input type="text" name="serverType" id="serverType2" placeholder="Server Type"/>
+            <label for="minecraftVersion2">Minecraft Version</label>
+            <input type="text" name="minecraftVersion" id="minecraftVersion2" placeholder="Minecraft Version" />
+            <label for="deleteWorld2">Delete World</label>
+            <input type="checkbox" name="deleteWorld" id="deleteWorld2" />
             <br>
             <input type="submit" value="Submit" />
         </form>

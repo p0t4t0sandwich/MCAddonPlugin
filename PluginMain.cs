@@ -2,12 +2,12 @@
 using ModuleShared;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using System.IO;
 using System.Linq;
 using System.Reflection;
-using System.Threading;
-using System.Threading.Tasks;
 using FileManagerPlugin;
 using MinecraftModule;
+using Newtonsoft.Json;
 
 //Your namespace must match the assembly name and the filename. Do not change one without changing the other two.
 namespace MCAddonPlugin {
@@ -22,6 +22,7 @@ namespace MCAddonPlugin {
         private readonly IFeatureManager _features;
         private readonly MinecraftApp _app;
         private readonly WebMethods webMethods;
+        private readonly List<ServerInfo> _serverInfoQueue = new List<ServerInfo>();
 
         //All constructor arguments after currentPlatform are optional, and you may ommit them if you don't
         //need that particular feature. The features you request don't have to be in any particular order.
@@ -68,7 +69,22 @@ namespace MCAddonPlugin {
 
         //This gets called after every plugin is loaded. From here on it's safe
         //to use code that depends on other plugins and use IFeatureManager.RequestFeature
-        public override void PostInit() { }
+        public override void PostInit() {
+            try {
+                var fileManager = (IVirtualFileService) _features.RequestFeature<IWSTransferHandler>();
+                var queueFile = fileManager.GetFile("serverInfoQueue.json");
+                if (!queueFile.Exists) {
+                    return;
+                }
+                var fileStream = queueFile.OpenRead();
+                var streamReader = new StreamReader(fileStream);
+                var queueJson = streamReader.ReadToEnd();
+                _serverInfoQueue.AddRange(JsonConvert.DeserializeObject<List<ServerInfo>>(queueJson));
+            }
+            catch (Exception e) {
+                _log.Error("Error reading server info queue: " + e.Message);
+            }
+        }
 
         public override IEnumerable<SettingStore> SettingStores => Utilities.EnumerableFrom(_settings);
         
@@ -137,9 +153,8 @@ namespace MCAddonPlugin {
             _log.Debug("PostJava: " + _app.Module.settings.Java.JavaVersion);
             _log.Debug("PostVersion: " + versionInfo);
             
-            // Update the modloader to fix server starting
-            // TODO: Remove when fixed internally
-            if (ShouldUpdate(serverType, minecraftVersion)) {
+            // Update the modloader if necessary
+            if (ShouldUpdate(serverType, minecraftVersion, versionInfo.ToString())) {
                 _app.Update();
             }
             
@@ -147,28 +162,32 @@ namespace MCAddonPlugin {
         }
 
         [SuppressMessage("ReSharper", "SwitchStatementMissingSomeEnumCasesNoDefault")]
-        private static bool ShouldUpdate(MCConfig.ServerType serverType, MinecraftVersion minecraftVersion) {
-            if (serverType != MCConfig.ServerType.Forge) {
-                return false;
+        private bool ShouldUpdate(MCConfig.ServerType serverType, MinecraftVersion minecraftVersion, string versionInfo) {
+            var fileManager = (IVirtualFileService) _features.RequestFeature<IWSTransferHandler>();
+            switch (serverType) {
+                case MCConfig.ServerType.Forge:
+                    switch (minecraftVersion) {
+                        // TODO: Remove these once it's fixed internally
+                        case MinecraftVersion.V1_17:
+                        case MinecraftVersion.V1_17_1:
+                        case MinecraftVersion.V1_18:
+                        case MinecraftVersion.V1_18_1:
+                        case MinecraftVersion.V1_18_2:
+                        case MinecraftVersion.V1_19:
+                        case MinecraftVersion.V1_19_1:
+                        case MinecraftVersion.V1_19_2:
+                        case MinecraftVersion.V1_19_3:
+                        case MinecraftVersion.V1_19_4:
+                        case MinecraftVersion.V1_20:
+                        case MinecraftVersion.V1_20_1:
+                        case MinecraftVersion.V1_20_2:
+                            return !fileManager.GetFile($"libraries/net/minecraftforge/forge/{versionInfo}/unix_args.txt").Exists;
+                    }
+                    break;
+                case MCConfig.ServerType.NeoForge:
+                    return !fileManager.GetFile($"libraries/net/neoforged/neoforge/{versionInfo}/unix_args.txt").Exists;
             }
-            
-            switch (minecraftVersion) {
-                case MinecraftVersion.V1_17:
-                case MinecraftVersion.V1_17_1:
-                case MinecraftVersion.V1_18:
-                case MinecraftVersion.V1_18_1:
-                case MinecraftVersion.V1_18_2:
-                case MinecraftVersion.V1_19:
-                case MinecraftVersion.V1_19_1:
-                case MinecraftVersion.V1_19_2:
-                case MinecraftVersion.V1_19_3:
-                case MinecraftVersion.V1_19_4:
-                case MinecraftVersion.V1_20:
-                case MinecraftVersion.V1_20_1:
-                case MinecraftVersion.V1_20_2:
-                    return false;
-            }
-            return true;
+            return false;
         }
 
         private void UpdateJavaVersion(MinecraftVersion minecraftVersion) {
@@ -237,6 +256,52 @@ namespace MCAddonPlugin {
                     break;
             }
         }
+
+        class ServerInfo {
+            public MCConfig.ServerType ServerType { get; set; }
+            public MinecraftVersion MinecraftVersion { get; set; }
+            public bool DeleteWorld { get; set; }
+        }
+        
+        public ActionResult AddServerInfoToQueue(MCConfig.ServerType serverType, MinecraftVersion minecraftVersion, bool deleteWorld = false) {
+            _serverInfoQueue.Add(new ServerInfo {
+                ServerType = serverType,
+                MinecraftVersion = minecraftVersion,
+                DeleteWorld = deleteWorld
+            });
+            
+            var fileManager = (IVirtualFileService) _features.RequestFeature<IWSTransferHandler>();
+            var queueFile = fileManager.GetFile("serverInfoQueue.json");
+            try {
+                var fileStream = queueFile.OpenWrite();
+                var streamWriter = new StreamWriter(fileStream);
+                streamWriter.Write(JsonConvert.SerializeObject(_serverInfoQueue));
+            } catch (Exception e) {
+                return ActionResult.FailureReason("Error processing server info queue: " + e.Message);
+            }
+            
+            return ActionResult.Success;
+        }
+        
+        public ActionResult ProcessServerInfoQueue() {
+            ServerInfo serverInfo = _serverInfoQueue.FirstOrDefault();
+            if (serverInfo == null) {
+                return ActionResult.FailureReason("No server info in the queue.");
+            }
+            _serverInfoQueue.RemoveAt(0);
+            
+            var fileManager = (IVirtualFileService) _features.RequestFeature<IWSTransferHandler>();
+            var queueFile = fileManager.GetFile("serverInfoQueue.json");
+            try {
+                var fileStream = queueFile.OpenWrite();
+                var streamWriter = new StreamWriter(fileStream);
+                streamWriter.Write(JsonConvert.SerializeObject(_serverInfoQueue));
+            } catch (Exception e) {
+                return ActionResult.FailureReason("Error processing server info queue: " + e.Message);
+            }
+            
+            return SetServerInfo(serverInfo.ServerType, serverInfo.MinecraftVersion, serverInfo.DeleteWorld);
+        }
         
         public enum NoYes {
             No,
@@ -249,5 +314,8 @@ namespace MCAddonPlugin {
             [ParameterDescription("The version of Minecraft to use")] MinecraftVersion minecraftVersion,
             [ParameterDescription("Delete the world folder when setting up the server")] NoYes deleteWorld = NoYes.No)
             => SetServerInfo(serverType, minecraftVersion, deleteWorld == NoYes.Yes);
+        
+        [ScheduleableTask("Set the server's modloader and version based on the server info queue.")]
+        public ActionResult ScheduleProcessServerInfoQueue() => ProcessServerInfoQueue();
     }
 }

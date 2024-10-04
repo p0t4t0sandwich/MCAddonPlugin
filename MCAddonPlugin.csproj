@@ -70,6 +70,9 @@
     <Reference Include="MinecraftModule">
       <HintPath>/home/dylan/code/ampapi/AMP_x86_64/Plugins/MinecraftModule/MinecraftModule.dll</HintPath>
     </Reference>
+    <Reference Include="Newtonsoft.Json">
+      <HintPath>/home/dylan/code/ampapi/AMP_x86_64/Newtonsoft.Json.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Xml.Linq" />
@@ -97,7 +100,7 @@
         mkdir -p /run/user/1000/gvfs/sftp:host=localhost,port=2223,user=admin/__VDS__TestServer01/Plugins/$(ProjectName)/
         cp $(TargetPath) /run/user/1000/gvfs/sftp:host=localhost,port=2223,user=admin/__VDS__TestServer01/Plugins/$(ProjectName)/
 
-        /home/dylan/code/MCAddonPlugin/tailwindcss -i /home/dylan/code/MCAddonPlugin/input.css -o /home/dylan/code/MCAddonPlugin/WebRoot/output.css --minify
+        /home/dylan/code/MCAddonPlugin/tailwindcss -i /home/dylan/code/MCAddonPlugin/input.css -o /home/dylan/code/MCAddonPlugin/WebRoot/MCAddon.css --minify
         
         mkdir -p /run/user/1000/gvfs/sftp:host=localhost,port=2223,user=admin/__VDS__TestServer01/Plugins/$(ProjectName)/WebRoot/
         cp /home/dylan/code/MCAddonPlugin/WebRoot/*.* /run/user/1000/gvfs/sftp:host=localhost,port=2223,user=admin/__VDS__TestServer01/Plugins/$(ProjectName)/WebRoot/

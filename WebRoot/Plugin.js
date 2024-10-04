@@ -50,4 +50,4 @@ this.tabs = [
     }
 ];
 
-this.stylesheet = "";    //Styles for tab-specific styles
+this.stylesheet = "MCAddon.css";    //Styles for tab-specific styles
