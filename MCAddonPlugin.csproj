@@ -87,8 +87,9 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="DEVELOPER_README.txt" />
+    <Content Include="input.css" />
     <Content Include="WebRoot\Plugin.js" />
-    <Content Include="WebRoot\SampleTab.html" />
+    <Content Include="WebRoot\MCAddon.html" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
     <PropertyGroup>
@@ -96,10 +97,10 @@
         mkdir -p /run/user/1000/gvfs/sftp:host=localhost,port=2223,user=admin/__VDS__TestServer01/Plugins/$(ProjectName)/
         cp $(TargetPath) /run/user/1000/gvfs/sftp:host=localhost,port=2223,user=admin/__VDS__TestServer01/Plugins/$(ProjectName)/
 
-        if [ -d "./WebRoot" ]; then
+        /home/dylan/code/MCAddonPlugin/tailwindcss -i /home/dylan/code/MCAddonPlugin/input.css -o /home/dylan/code/MCAddonPlugin/WebRoot/output.css --minify
+        
         mkdir -p /run/user/1000/gvfs/sftp:host=localhost,port=2223,user=admin/__VDS__TestServer01/Plugins/$(ProjectName)/WebRoot/
-        cp ./WebRoot/*.* /run/user/1000/gvfs/sftp:host=localhost,port=2223,user=admin/__VDS__TestServer01/Plugins/$(ProjectName)/WebRoot/
-        fi
+        cp /home/dylan/code/MCAddonPlugin/WebRoot/*.* /run/user/1000/gvfs/sftp:host=localhost,port=2223,user=admin/__VDS__TestServer01/Plugins/$(ProjectName)/WebRoot/
       </PostBuildEvent>
     </PropertyGroup>
   

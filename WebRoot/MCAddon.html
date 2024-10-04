@@ -1,0 +1,30 @@
+﻿<!DOCTYPE html>
+
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <meta charset="utf-8" />
+    <title></title>
+</head>
+<script>
+    function ProcessForm(form) {
+        API.MCAddonPlugin.SetServerInfo(form.serverType.value, form.minecraftVersion.value, form.deleteWorld.checked);
+    }
+</script>
+<script src="https://cdn.tailwindcss.com"></script>
+<iframe name="dummyframe" id="dummyframe" style="display: none;"></iframe>
+<body>
+    <div class="setup" style="width: 30%; margin: 0">
+        <h1>Setup Server</h1>
+        <form action="javascript:;" onsubmit="ProcessForm(this)" target="dummyframe">
+            <label for="serverType">Server Type</label>
+            <input type="text" name="serverType" id="serverType" placeholder="Server Type"/>
+            <label for="minecraftVersion">Minecraft Version</label>
+            <input type="text" name="minecraftVersion" id="minecraftVersion" placeholder="Minecraft Version" />
+            <label for="deleteWorld">Delete World</label>
+            <input type="checkbox" name="deleteWorld" id="deleteWorld" />
+            <br>
+            <input type="submit" value="Submit" />
+        </form>
+    </div>
+</body>
+</html>

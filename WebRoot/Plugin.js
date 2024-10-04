@@ -39,17 +39,15 @@ this.plugin = {
 
 this.tabs = [
     {
-        File: "SampleTab.html", //URL to fetch the tab contents from. Relative to the plugin WebRoot directory.
+        File: "MCAddon.html", //URL to fetch the tab contents from. Relative to the plugin WebRoot directory.
         ExternalTab: false,   //If True, 'File' is treated as an absolute URL to allow contents to be loaded from elsewhere. 
         //Note that the appropriate CORS headers are required on the hosting server to allow this.
-        ShortName: "Sample",    //Name used for the element. Prefixed with tab_PLUGINNAME_
-        Name: "Sample",     //Display name for the tab.
-        Icon: "",             //Icon to show in the tab.
+        ShortName: "MCAddon",    //Name used for the element. Prefixed with tab_PLUGINNAME_
+        Name: "MCAddon",     //Display name for the tab.
+        Icon: "widgets",             //Icon to show in the tab.
         Light: false,                //Use the 'light' theme for this tab.
         Category: ""
     }
 ];
 
 this.stylesheet = "";    //Styles for tab-specific styles
-
-//Put your code here.
