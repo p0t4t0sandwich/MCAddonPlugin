@@ -1,15 +1,15 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
-<Project ToolsVersion="12.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+<Project Sdk="Microsoft.NET.Sdk" ToolsVersion="17.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup>
+    <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{403140C1-55EF-4A4D-85A3-76115564B1D7}</ProjectGuid>
+    <ProjectGuid>{39C5733E-59B4-419F-80F0-D8B6E30BFFF6}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>MCAddonPlugin</RootNamespace>
     <AssemblyName>MCAddonPlugin</AssemblyName>
-    <TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
+    <TargetFramework>net8.0</TargetFramework>
     <FileAlignment>512</FileAlignment>
     <SccProjectName>SAK</SccProjectName>
     <SccLocalPath>SAK</SccLocalPath>
@@ -59,62 +59,34 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="ModuleShared">
-      <HintPath>/home/dylan/code/ampapi/AMP_x86_64/ModuleShared.dll</HintPath>
-    </Reference>
-<!--    <Reference Include="ADSModule">-->
-<!--      <HintPath>/home/dylan/code/ampapi/AMP_x86_64/Plugins/ADSModule/ADSModule.dll</HintPath>-->
-<!--    </Reference>-->
-    <Reference Include="FileManagerPlugin">
-      <HintPath>/home/dylan/code/ampapi/AMP_x86_64/Plugins/FileManagerPlugin/FileManagerPlugin.dll</HintPath>
-    </Reference>
-    <Reference Include="MinecraftModule">
-      <HintPath>/home/dylan/code/ampapi/AMP_x86_64/Plugins/MinecraftModule/MinecraftModule.dll</HintPath>
+      <HintPath>../../../AMP/Mainline/20241025.4/AMP_x86_64/ModuleShared.dll</HintPath>
+      <Private>true</Private>
     </Reference>
     <Reference Include="Newtonsoft.Json">
-      <HintPath>/home/dylan/code/ampapi/AMP_x86_64/Newtonsoft.Json.dll</HintPath>
+      <HintPath>../../../AMP/Mainline/20241025.4/AMP_x86_64/Newtonsoft.Json.dll</HintPath>
+      <Private>true</Private>
     </Reference>
-    <Reference Include="System" />
-    <Reference Include="System.Core" />
-    <Reference Include="System.Xml.Linq" />
-    <Reference Include="System.Data.DataSetExtensions" />
-    <Reference Include="Microsoft.CSharp" />
-    <Reference Include="System.Data" />
-    <Reference Include="System.Xml" />
+    <Reference Include="FileManagerPlugin">
+      <HintPath>../../../AMP/Mainline/20241025.4/AMP_x86_64/Plugins/FileManagerPlugin/FileManagerPlugin.dll</HintPath>
+      <Private>true</Private>
+    </Reference>
+    <Reference Include="MinecraftModule">
+      <HintPath>../../../AMP/Mainline/20241025.4/AMP_x86_64/Plugins/MinecraftModule/MinecraftModule.dll</HintPath>
+      <Private>true</Private>
+    </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="MinecraftVersion.cs" />
-    <Compile Include="PluginMain.cs" />
-    <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Settings.cs" />
-    <Compile Include="WebMethods.cs" />
-  </ItemGroup>
-  <ItemGroup>
-    <Content Include="DEVELOPER_README.txt" />
-    <Content Include="input.css" />
     <Content Include="WebRoot\Plugin.js" />
-    <Content Include="WebRoot\MCAddon.html" />
+    <Content Include="WebRoot\SampleTab.html" />
   </ItemGroup>
-  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
-    <PropertyGroup>
-      <PostBuildEvent>
-        mkdir -p /run/user/1000/gvfs/sftp:host=localhost,port=2223,user=admin/__VDS__TestServer01/Plugins/$(ProjectName)/
-        cp $(TargetPath) /run/user/1000/gvfs/sftp:host=localhost,port=2223,user=admin/__VDS__TestServer01/Plugins/$(ProjectName)/
-
-        /home/dylan/code/MCAddonPlugin/tailwindcss -i /home/dylan/code/MCAddonPlugin/input.css -o /home/dylan/code/MCAddonPlugin/WebRoot/MCAddon.css --minify
-        
-        mkdir -p /run/user/1000/gvfs/sftp:host=localhost,port=2223,user=admin/__VDS__TestServer01/Plugins/$(ProjectName)/WebRoot/
-        cp /home/dylan/code/MCAddonPlugin/WebRoot/*.* /run/user/1000/gvfs/sftp:host=localhost,port=2223,user=admin/__VDS__TestServer01/Plugins/$(ProjectName)/WebRoot/
-      </PostBuildEvent>
-    </PropertyGroup>
-  
 <!--  <PropertyGroup>-->
 <!--    <PostBuildEvent>-->
-<!--      mkdir -p /home/amp/.ampdata/instances/TestServer01/Plugins/$(ProjectName)/-->
-<!--      cp $(TargetPath) /home/amp/.ampdata/instances/TestServer01/Plugins/$(ProjectName)/-->
+<!--      mkdir -p /run/user/1000/gvfs/sftp:host=amp01,port=2223,user=dylan/__VDS__ADS01/Plugins/$(ProjectName)/-->
+<!--      cp $(TargetPath) /run/user/1000/gvfs/sftp:host=amp01,port=2223,user=dylan/__VDS__ADS01/Plugins/$(ProjectName)/-->
 
 <!--      if [ -d "./WebRoot" ]; then-->
-<!--      mkdir -p /home/amp/.ampdata/instances/TestServer01/Plugins/$(ProjectName)/WebRoot/-->
-<!--      cp ./WebRoot/*.* /home/amp/.ampdata/instances/TestServer01/Plugins/$(ProjectName)/WebRoot/-->
+<!--      mkdir -p /run/user/1000/gvfs/sftp:host=amp01,port=2223,user=dylan/__VDS__ADS01/Plugins/$(ProjectName)/WebRoot/-->
+<!--      cp ./WebRoot/*.* /run/user/1000/gvfs/sftp:host=amp01,port=2223,user=dylan/__VDS__ADS01/Plugins/$(ProjectName)/WebRoot/-->
 <!--      fi-->
 <!--    </PostBuildEvent>-->
 <!--  </PropertyGroup>-->
