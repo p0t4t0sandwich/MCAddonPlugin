@@ -1,5 +1,7 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.ComponentModel;
+using System.Configuration;
 using MCAddonPlugin.Submodules.ServerTypeUtils;
 using MinecraftModule;
 using ModuleShared;
@@ -11,6 +13,8 @@ public class Settings : SettingStore {
     public ServerTypeUtilsSettings ServerTypeUtils = new();
     
     [Description("MCAddon")]
+    [SettingsGroupName("Whitelist:dns")]
+    [Serializable]
     public class ServerTypeUtilsSettings : SettingSectionStore {
         [WebSetting("Server Type", "The server type or modloader to use", false)]
         [InlineAction("MCAddonPlugin", "SetServerInfo", "Setup Server")]
@@ -24,6 +28,8 @@ public class Settings : SettingStore {
     }
     
     [Description("MCAddon")]
+    [SettingsGroupName("Whitelist:joystick")]
+    [Serializable]
     public class WhitelistSettings : SettingSectionStore {
         [WebSetting("Whitelist Enabled", "Enable the whitelist", false)]
         public bool Enabled = false;
