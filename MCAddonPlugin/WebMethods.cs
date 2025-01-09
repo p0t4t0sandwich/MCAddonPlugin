@@ -1,5 +1,6 @@
 ﻿using System;
 using System.ComponentModel;
+using MCAddonPlugin.Submodules.ServerTypeUtils;
 using ModuleShared;
 using MinecraftModule;
 
@@ -33,7 +34,7 @@ internal class WebMethods : WebMethodsBase {
         // Parse the platform and use the ServerType enum
         MCConfig.ServerType parsedType;
         if (string.IsNullOrEmpty(serverType)) {
-            parsedType = _settings.MainSettings.ServerType;
+            parsedType = _settings.ServerTypeUtils.ServerType;
         } else {
             Enum.TryParse(serverType, true, out parsedType);
         }
@@ -41,14 +42,14 @@ internal class WebMethods : WebMethodsBase {
         // Parse the Minecraft version and use the MinecraftVersion enum
         MinecraftVersion parsedVersion;
         if (string.IsNullOrEmpty(minecraftVersion)) {
-            parsedVersion = _settings.MainSettings.MinecraftVersion;
+            parsedVersion = _settings.ServerTypeUtils.MinecraftVersion;
         } else {
             Enum.TryParse("V" + minecraftVersion.Replace(".", "_"), out parsedVersion);
         }
             
-        return _plugin.SetServerInfo(parsedType, parsedVersion, deleteWorld);
+        return _plugin.ServerTypeUtils.SetServerInfo(parsedType, parsedVersion, deleteWorld);
     }
-        
+
     [JSONMethod(
         "Add server info to the queue.",
         "An ActionResult indicating the success or failure of the operation.")]
@@ -59,7 +60,7 @@ internal class WebMethods : WebMethodsBase {
         // Parse the Minecraft version and use the MinecraftVersion enum
         Enum.TryParse("V" + minecraftVersion.Replace(".", "_"), out MinecraftVersion parsedVersion);
             
-        _plugin.AddServerInfoToQueue(parsedType, parsedVersion, deleteWorld);
+        _plugin.ServerTypeUtils.AddServerInfoToQueue(parsedType, parsedVersion, deleteWorld);
         return ActionResult.Success;
     }
         
@@ -67,6 +68,6 @@ internal class WebMethods : WebMethodsBase {
         "Process the server info queue.",
         "An ActionResult indicating the success or failure of the operation.")]
     public ActionResult ProcessServerInfoQueue() {
-        return _plugin.ProcessServerInfoQueue();
+        return _plugin.ServerTypeUtils.ProcessServerInfoQueue();
     }
 }
