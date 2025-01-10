@@ -11,9 +11,10 @@ namespace MCAddonPlugin;
 [Description("MCAddon")]
 public class Settings : SettingStore {
     public ServerTypeUtilsSettings ServerTypeUtils = new();
+    public WhitelistSettings Whitelist = new();
     
     [Description("MCAddon")]
-    [SettingsGroupName("Whitelist:dns")]
+    [SettingsGroupName("Server Type Utils:dns")]
     [Serializable]
     public class ServerTypeUtilsSettings : SettingSectionStore {
         [WebSetting("Server Type", "The server type or modloader to use", false)]
@@ -21,7 +22,7 @@ public class Settings : SettingStore {
         public MCConfig.ServerType ServerType = MCConfig.ServerType.Forge;
 
         [WebSetting("Minecraft Version", "The version of Minecraft to use", false)]
-        public MinecraftVersion MinecraftVersion = MinecraftVersion.V1_21_4;
+        public MinecraftVersion MinecraftVersion = MinecraftVersion.UNKNOWN;
 
         [WebSetting("Delete World Folder", "Delete the world folder when setting up the server", false)]
         public bool DelWorldFolder = false;
@@ -38,5 +39,8 @@ public class Settings : SettingStore {
         [InlineAction("MCAddonPlugin", "UpdateWhitelist", "Update")]
         [InlineAction("MCAddonPlugin", "RefreshWhitelist", "Refresh")]
         public List<string> Players = [];
+        
+        [WebSetting("Geyser Prefix", "The prefix for Geyser players", false)]
+        public string GeyserPrefix = ".";
     }
 }

@@ -13,18 +13,18 @@ namespace MCAddonPlugin.Submodules.ServerTypeUtils;
 
 public class ServerTypeUtils {
     private readonly PluginMain _plugin;
+    private readonly MinecraftApp _app;
     private readonly Settings _settings;
     private readonly ILogger _log;
     private readonly IVirtualFileService _fileManager;
-    private readonly MinecraftApp _mcApp;
     private readonly List<ServerInfo> _serverInfoQueue = [];
     
-    public ServerTypeUtils(PluginMain plugin, Settings settings, ILogger log, IVirtualFileService fileManager, MinecraftApp mcApp) {
+    public ServerTypeUtils(PluginMain plugin, MinecraftApp app, Settings settings, ILogger log, IVirtualFileService fileManager) {
         _plugin = plugin;
+        _app = app;
         _settings = settings;
         _log = log;
         _fileManager = fileManager;
-        _mcApp = mcApp;
         
         try {
             var queueFile = _fileManager.GetFile("serverInfoQueue.json");
@@ -52,18 +52,18 @@ public class ServerTypeUtils {
         var settings = new Dictionary<string, object>();
         
         // BEFORE
-        _log.Debug("PreServerType: " + _mcApp.Module.Settings.Minecraft.ServerType);
-        _log.Debug("PreLevelName: " + _mcApp.Module.Settings.Minecraft.LevelName);
-        _log.Debug("PreJava: " + _mcApp.Module.Settings.Java.JavaVersion);
+        _log.Debug("PreServerType: " + _app.Module.Settings.Minecraft.ServerType);
+        _log.Debug("PreLevelName: " + _app.Module.Settings.Minecraft.LevelName);
+        _log.Debug("PreJava: " + _app.Module.Settings.Java.JavaVersion);
             
         var mcVersion = minecraftVersion.ToString().Substring(1).Replace("_", ".");
         
         object versionInfo = null;
         switch (serverType) {
             case MCConfig.ServerType.Forge:
-                foreach (var version in _mcApp.Module.Updates.ForgeVersionInfo.number) {
+                foreach (var version in _app.Module.Updates.ForgeVersionInfo.number) {
                     if (!mcVersion.Equals(version.Key.Split("-")[0])) continue;
-                    _log.Debug("PreVersion: " + _mcApp.Module.Settings.Minecraft.SpecificForgeVersion);
+                    _log.Debug("PreVersion: " + _app.Module.Settings.Minecraft.SpecificForgeVersion);
                     versionInfo = version.Value.ToString();
                     settings["MinecraftModule.Minecraft.ServerType"] = serverType;
                     settings["MinecraftModule.Minecraft.SpecificForgeVersion"] = version.Value.ToString();
@@ -71,9 +71,9 @@ public class ServerTypeUtils {
                 }
                 break;
             case MCConfig.ServerType.NeoForge:
-                foreach (var version in _mcApp.Module.Updates.NeoForgeVersionInfo.number) {
+                foreach (var version in _app.Module.Updates.NeoForgeVersionInfo.number) {
                     if (!version.Key.StartsWith(mcVersion.Substring(2, mcVersion.Length - 2))) continue;
-                    _log.Debug("PreVersion: " + _mcApp.Module.Settings.Minecraft.SpecificNeoForgeVersion);
+                    _log.Debug("PreVersion: " + _app.Module.Settings.Minecraft.SpecificNeoForgeVersion);
                     versionInfo = version.Value.ToString();
                     settings["MinecraftModule.Minecraft.ServerType"] = serverType;
                     settings["MinecraftModule.Minecraft.SpecificNeoForgeVersion"] = version.Value.ToString();
@@ -94,7 +94,7 @@ public class ServerTypeUtils {
         }
             
         // Change the world name to the MC version
-        if (!_mcApp.Module.Settings.Minecraft.LevelName.EndsWith(mcVersion)) {
+        if (!_app.Module.Settings.Minecraft.LevelName.EndsWith(mcVersion)) {
             settings["MinecraftModule.Minecraft.LevelName"] = $"world_{mcVersion}";
         }
 
@@ -111,16 +111,16 @@ public class ServerTypeUtils {
             
         // Update the modloader if necessary
         if (ShouldUpdate(serverType, minecraftVersion, versionInfo.ToString())) {
-            _mcApp.Update();
+            _app.Update();
         }
         
         // Send setting updates to the UI
         _plugin.SetSettings(settings);
         
         // AFTER
-        _log.Debug("PostServerType: " + _mcApp.Module.Settings.Minecraft.ServerType);
-        _log.Debug("PostLevelName: " + _mcApp.Module.Settings.Minecraft.LevelName);
-        _log.Debug("PostJava: " + _mcApp.Module.Settings.Java.JavaVersion);
+        _log.Debug("PostServerType: " + _app.Module.Settings.Minecraft.ServerType);
+        _log.Debug("PostLevelName: " + _app.Module.Settings.Minecraft.LevelName);
+        _log.Debug("PostJava: " + _app.Module.Settings.Java.JavaVersion);
         _log.Debug("PostVersion: " + versionInfo);
             
         return ActionResult.Success;
@@ -170,8 +170,8 @@ public class ServerTypeUtils {
         // private Dictionary<string, string> _app.GetJavaVersions();
         Dictionary<string, string> javaVersions;
         try {
-            MethodInfo method = _mcApp.GetType().GetMethod("GetJavaVersions", BindingFlags.NonPublic | BindingFlags.Instance);
-            javaVersions = (Dictionary<string, string>) method.Invoke(_mcApp, null);
+            MethodInfo method = _app.GetType().GetMethod("GetJavaVersions", BindingFlags.NonPublic | BindingFlags.Instance);
+            javaVersions = (Dictionary<string, string>) method.Invoke(_app, null);
         } catch (Exception e) {
             _log.Error("Error getting Java versions: " + e.Message);
             return null;

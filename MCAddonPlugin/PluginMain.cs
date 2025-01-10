@@ -1,6 +1,8 @@
-﻿using ModuleShared;
+﻿using System;
+using ModuleShared;
 using System.Collections.Generic;
 using System.Reflection;
+using System.Text.RegularExpressions;
 using FileManagerPlugin;
 using GSMyAdmin.WebServer;
 using MCAddonPlugin.Submodules.ServerTypeUtils;
@@ -22,7 +24,7 @@ public class PluginMain : AMPPlugin {
     private readonly IPluginMessagePusher _message;
     private readonly IFeatureManager _features;
     private IVirtualFileService _fileManager;
-    private readonly MinecraftApp _mcApp;
+    private readonly MinecraftApp _app;
     private readonly WebMethods webMethods;
     
     public ServerTypeUtils ServerTypeUtils { get; private set; }
@@ -63,7 +65,7 @@ public class PluginMain : AMPPlugin {
     }
 
     /// <summary>
-    /// A utility method that sets settings via the Core module and udates them in the UI (assuming there's a connected UI)
+    /// A utility method that sets settings via the Core module and updates them in the UI (assuming there's a connected UI)
     /// </summary>
     /// <param name="settings">A Dictionary of settings, in the format of settings["Some.Setting.Node"] = someObject</param>
     public void SetSettings(Dictionary<string, object> settings) {
@@ -92,9 +94,9 @@ public class PluginMain : AMPPlugin {
         _features = Features;
         _settings.SettingModified += Settings_SettingModified;
             
-        _mcApp = (MinecraftApp) Application;
+        _app = (MinecraftApp) Application;
             
-        webMethods = new WebMethods(this, _settings, _log, _features, _mcApp);
+        webMethods = new WebMethods(this, _app, _settings, _log);
     }
 
     public override void Init(out WebMethodsBase APIMethods) {
@@ -103,8 +105,8 @@ public class PluginMain : AMPPlugin {
     
     public override void PostInit() {
         _fileManager = (IVirtualFileService)_features.RequestFeature<IWSTransferHandler>();
-        ServerTypeUtils = new ServerTypeUtils(this, _settings, _log, _fileManager, _mcApp);
-        Whitelist = new Whitelist(this, _settings, _log, _fileManager, _mcApp);
+        ServerTypeUtils = new ServerTypeUtils(this, _app, _settings, _log, _fileManager);
+        Whitelist = new Whitelist(this, _app, _settings, _log, _fileManager);
     }
 
     public override IEnumerable<SettingStore> SettingStores => Utilities.EnumerableFrom(_settings);
@@ -148,4 +150,35 @@ public class PluginMain : AMPPlugin {
     /// <returns></returns>
     [ScheduleableTask("Set the server's modloader and version based on the server info queue.")]
     public ActionResult ScheduleProcessServerInfoQueue() => ServerTypeUtils.ProcessServerInfoQueue();
+    
+    // ----------------------------- Whitelist -----------------------------
+    
+    [MessageHandler(@"^\[\d\d:\d\d:\d\d\] \[(.+?)?INFO\]: Whitelist is now turned on$")]
+    internal bool WhiteListEnable(Match match) {
+        _settings.Whitelist.Enabled = true;
+        return false;
+    }
+    
+    [MessageHandler(@"^\[\d\d:\d\d:\d\d\] \[(.+?)?INFO\]: Whitelist is now turned off$")]
+    internal bool WhiteListDisable(Match match) {
+        _settings.Whitelist.Enabled = false;
+        return false;
+    }
+    
+    [MessageHandler(@"^\[\d\d:\d\d:\d\d\] \[(.+?)?INFO\]: (\w+) \(/\b((?:\d{1,3}\.){3}\d{1,3})\b:\d{5}\) lost connection: You are not white-listed on this server!$")]
+    internal bool WhiteListKick(Match match) {
+        PlayerNotWhitelisted?.Invoke(this, new PlayerNotWhitelistedEventArgs {
+            Name = match.Groups[2].Value,
+            IP = match.Groups[3].Value
+        });
+        return false;
+    }
+    
+    [ScheduleableEvent("A player tries to join the server but is not whitelisted")]
+    public event EventHandler<PlayerNotWhitelistedEventArgs> PlayerNotWhitelisted;
+    
+    public class PlayerNotWhitelistedEventArgs : EventArgs {
+        public string Name { get; init; }
+        public string IP { get; init; }
+    }
 }

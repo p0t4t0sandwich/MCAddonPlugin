@@ -8,6 +8,8 @@ namespace MCAddonPlugin.Submodules.ServerTypeUtils;
 /// </summary>
 [SuppressMessage("ReSharper", "InconsistentNaming")]
 public enum MinecraftVersion {
+    [EnumDisplayName("Unknown")]
+    UNKNOWN = 0,
     [EnumDisplayName("1.14")]
     V1_14 = 1140,
     [EnumDisplayName("1.14.1")]

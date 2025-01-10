@@ -9,22 +9,23 @@ namespace MCAddonPlugin;
 [DisplayName("MCAddon")]
 internal class WebMethods : WebMethodsBase {
     private readonly PluginMain _plugin;
-    private readonly Settings _settings;
-    private readonly IFeatureManager _features;
-    private readonly ILogger _log;
     private readonly MinecraftApp _app;
+    private readonly Settings _settings;
+    private readonly ILogger _log;
 
-    public WebMethods(PluginMain plugin, Settings settings, ILogger log, IFeatureManager features, MinecraftApp app) {
+    public WebMethods(PluginMain plugin, MinecraftApp app, Settings settings, ILogger log) {
         _plugin = plugin;
-        _settings = settings;
-        _features = features;
-        _log = log;
         _app = app;
+        _settings = settings;
+        _log = log;
     }
 
     public enum MCAddonPluginPermissions {
-        SetServerInfo
+        SetServerInfo,
+        ManageServerInfoQueue
     }
+    
+    // ----------------------------- ServerTypeUtils ----------------------------- 
 
     [JSONMethod(
         "Switch the server to a different modloader or different version of Minecraft.",
@@ -38,36 +39,46 @@ internal class WebMethods : WebMethodsBase {
         } else {
             Enum.TryParse(serverType, true, out parsedType);
         }
-            
+
         // Parse the Minecraft version and use the MinecraftVersion enum
         MinecraftVersion parsedVersion;
         if (string.IsNullOrEmpty(minecraftVersion)) {
             parsedVersion = _settings.ServerTypeUtils.MinecraftVersion;
         } else {
-            Enum.TryParse("V" + minecraftVersion.Replace(".", "_"), out parsedVersion);
+            var tryParse = Enum.TryParse("V" + minecraftVersion.Replace(".", "_"), out parsedVersion);
+            if (!tryParse) {
+                return ActionResult.FailureReason("Invalid Minecraft version");
+            }
         }
-            
+
         return _plugin.ServerTypeUtils.SetServerInfo(parsedType, parsedVersion, deleteWorld);
     }
 
     [JSONMethod(
         "Add server info to the queue.",
         "An ActionResult indicating the success or failure of the operation.")]
+    [RequiresPermissions(MCAddonPluginPermissions.ManageServerInfoQueue)]
     public ActionResult AddServerInfoToQueue(string serverType = "", string minecraftVersion = "", bool deleteWorld = false) {
         // Parse the platform and use the ServerType enum
         Enum.TryParse(serverType, true, out MCConfig.ServerType parsedType);
             
         // Parse the Minecraft version and use the MinecraftVersion enum
-        Enum.TryParse("V" + minecraftVersion.Replace(".", "_"), out MinecraftVersion parsedVersion);
-            
+        var tryParse = Enum.TryParse("V" + minecraftVersion.Replace(".", "_"), out MinecraftVersion parsedVersion);
+        if (!tryParse) {
+            return ActionResult.FailureReason("Invalid Minecraft version");
+        }
+
         _plugin.ServerTypeUtils.AddServerInfoToQueue(parsedType, parsedVersion, deleteWorld);
         return ActionResult.Success;
     }
-        
+
     [JSONMethod(
         "Process the server info queue.",
         "An ActionResult indicating the success or failure of the operation.")]
+    [RequiresPermissions(MCAddonPluginPermissions.ManageServerInfoQueue)]
     public ActionResult ProcessServerInfoQueue() {
         return _plugin.ServerTypeUtils.ProcessServerInfoQueue();
     }
+    
+    // ----------------------------- Whitelist -----------------------------
 }
