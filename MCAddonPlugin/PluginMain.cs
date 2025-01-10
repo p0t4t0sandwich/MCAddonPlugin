@@ -24,8 +24,7 @@ public class PluginMain : AMPPlugin {
     private readonly IPluginMessagePusher _message;
     private readonly IFeatureManager _features;
     private IVirtualFileService _fileManager;
-    private readonly MinecraftApp _app;
-    private readonly WebMethods webMethods;
+    private readonly IApplicationWrapper _app;
     
     public ServerTypeUtils ServerTypeUtils { get; private set; }
     public Whitelist Whitelist { get; private set; }
@@ -94,19 +93,21 @@ public class PluginMain : AMPPlugin {
         _features = Features;
         _settings.SettingModified += Settings_SettingModified;
             
-        _app = (MinecraftApp) Application;
-            
-        webMethods = new WebMethods(this, _app, _settings, _log);
+        _app = Application;
     }
 
     public override void Init(out WebMethodsBase APIMethods) {
-        APIMethods = webMethods;
+        APIMethods = new WebMethods(this, _settings, _log);
     }
     
     public override void PostInit() {
         _fileManager = (IVirtualFileService)_features.RequestFeature<IWSTransferHandler>();
-        ServerTypeUtils = new ServerTypeUtils(this, _app, _settings, _log, _fileManager);
-        Whitelist = new Whitelist(this, _app, _settings, _log, _fileManager);
+        // Load MinecraftModule specific features
+        if (_app.GetType().FullName == "MinecraftModule.MinecraftApp") {
+            _log.Debug("MinecraftModule is loaded");
+            ServerTypeUtils = new ServerTypeUtils(this, _app, _settings, _log, _fileManager);
+            Whitelist = new Whitelist(this, _app, _settings, _log, _fileManager);
+        }
     }
 
     public override IEnumerable<SettingStore> SettingStores => Utilities.EnumerableFrom(_settings);
@@ -138,6 +139,8 @@ public class PluginMain : AMPPlugin {
     /// <param name="deleteWorld">Delete the world folder when setting up the server</param>
     /// <returns>An ActionResult</returns>
     [ScheduleableTask("Switch the server to a different modloader and/or version.")]
+    // TODO: Make Server Type conversion system to replace references to MCConfig.ServerType
+    // Also would allow for custom server types (defined by meeee)
     public ActionResult ScheduleSetServerInfo(
         [ParameterDescription("The server type or modloader to use")] MCConfig.ServerType serverType,
         [ParameterDescription("The version of Minecraft to use")] MinecraftVersion minecraftVersion,

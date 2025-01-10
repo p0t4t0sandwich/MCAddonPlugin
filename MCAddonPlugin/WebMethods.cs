@@ -9,13 +9,11 @@ namespace MCAddonPlugin;
 [DisplayName("MCAddon")]
 internal class WebMethods : WebMethodsBase {
     private readonly PluginMain _plugin;
-    private readonly MinecraftApp _app;
     private readonly Settings _settings;
     private readonly ILogger _log;
 
-    public WebMethods(PluginMain plugin, MinecraftApp app, Settings settings, ILogger log) {
+    public WebMethods(PluginMain plugin, Settings settings, ILogger log) {
         _plugin = plugin;
-        _app = app;
         _settings = settings;
         _log = log;
     }

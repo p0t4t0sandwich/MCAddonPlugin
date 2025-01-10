@@ -19,9 +19,9 @@ public class ServerTypeUtils {
     private readonly IVirtualFileService _fileManager;
     private readonly List<ServerInfo> _serverInfoQueue = [];
     
-    public ServerTypeUtils(PluginMain plugin, MinecraftApp app, Settings settings, ILogger log, IVirtualFileService fileManager) {
+    public ServerTypeUtils(PluginMain plugin, IApplicationWrapper app, Settings settings, ILogger log, IVirtualFileService fileManager) {
         _plugin = plugin;
-        _app = app;
+        _app = (MinecraftApp) app;
         _settings = settings;
         _log = log;
         _fileManager = fileManager;

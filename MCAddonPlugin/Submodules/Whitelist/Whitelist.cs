@@ -20,9 +20,9 @@ public class Whitelist {
     private readonly List<WhitelistEntry> _whitelist = [];
     private readonly HttpClient cl = new();
 
-    public Whitelist(PluginMain plugin, MinecraftApp app, Settings settings, ILogger log, IVirtualFileService fileManager) {
+    public Whitelist(PluginMain plugin, IApplicationWrapper app, Settings settings, ILogger log, IVirtualFileService fileManager) {
         _plugin = plugin;
-        _app = app;
+        _app = (MinecraftApp) app;
         _settings = settings;
         _log = log;
         _fileManager = fileManager;
