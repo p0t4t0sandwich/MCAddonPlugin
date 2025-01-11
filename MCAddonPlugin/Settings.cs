@@ -36,7 +36,7 @@ public class Settings : SettingStore {
         public bool Enabled = false;
         
         [WebSetting("Whitelist", "The list of players allowed on the server", false)]
-        [InlineAction("MCAddonPlugin", "UpdateWhitelist", "Update")]
+        [InlineAction("MCAddonPlugin", "SetWhitelist", "Update")]
         [InlineAction("MCAddonPlugin", "RefreshWhitelist", "Refresh")]
         public List<string> Players = [];
         

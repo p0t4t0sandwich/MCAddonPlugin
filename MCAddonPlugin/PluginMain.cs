@@ -5,8 +5,8 @@ using System.Reflection;
 using System.Text.RegularExpressions;
 using FileManagerPlugin;
 using GSMyAdmin.WebServer;
+using MCAddonPlugin.Submodules.Management;
 using MCAddonPlugin.Submodules.ServerTypeUtils;
-using MCAddonPlugin.Submodules.Whitelist;
 using MinecraftModule;
 using Newtonsoft.Json;
 
@@ -62,7 +62,7 @@ public class PluginMain : AMPPlugin {
         }
         set => _core = value;
     }
-
+    
     /// <summary>
     /// A utility method that sets settings via the Core module and updates them in the UI (assuming there's a connected UI)
     /// </summary>
@@ -78,7 +78,7 @@ public class PluginMain : AMPPlugin {
         }
         _message.Push("setsettings", settings);
     }
-
+    
     public PluginMain(ILogger log, IConfigSerializer config, IPlatformInfo platform,
         IRunningTasksManager taskManager, IApplicationWrapper Application,
         IPluginMessagePusher Message, IFeatureManager Features) {
@@ -105,8 +105,8 @@ public class PluginMain : AMPPlugin {
         // Load MinecraftModule specific features
         if (_app.GetType().FullName == "MinecraftModule.MinecraftApp") {
             _log.Debug("MinecraftModule is loaded");
-            ServerTypeUtils = new ServerTypeUtils(this, _app, _settings, _log, _fileManager);
             Whitelist = new Whitelist(this, _app, _settings, _log, _fileManager);
+            ServerTypeUtils = new ServerTypeUtils(this, _app, _settings, _log, _fileManager);
         }
     }
 
@@ -129,32 +129,7 @@ public class PluginMain : AMPPlugin {
         Yes
     }
 
-    // ----------------------------- ServerTypeUtils ----------------------------- 
-    
-    /// <summary>
-    /// Switch the server to a different modloader and/or version
-    /// </summary>
-    /// <param name="serverType">The server type or modloader to use</param>
-    /// <param name="minecraftVersion">The version of Minecraft to use</param>
-    /// <param name="deleteWorld">Delete the world folder when setting up the server</param>
-    /// <returns>An ActionResult</returns>
-    [ScheduleableTask("Switch the server to a different modloader and/or version.")]
-    // TODO: Make Server Type conversion system to replace references to MCConfig.ServerType
-    // Also would allow for custom server types (defined by meeee)
-    public ActionResult ScheduleSetServerInfo(
-        [ParameterDescription("The server type or modloader to use")] MCConfig.ServerType serverType,
-        [ParameterDescription("The version of Minecraft to use")] MinecraftVersion minecraftVersion,
-        [ParameterDescription("Delete the world folder when setting up the server")] NoYes deleteWorld = NoYes.No)
-        => ServerTypeUtils.SetServerInfo(serverType, minecraftVersion, deleteWorld == NoYes.Yes);
-        
-    /// <summary>
-    /// Set the server's modloader and version based on the server info queue
-    /// </summary>
-    /// <returns></returns>
-    [ScheduleableTask("Set the server's modloader and version based on the server info queue.")]
-    public ActionResult ScheduleProcessServerInfoQueue() => ServerTypeUtils.ProcessServerInfoQueue();
-    
-    // ----------------------------- Whitelist -----------------------------
+    // ----------------------------- Management - Whitelist -----------------------------
     
     [MessageHandler(@"^\[\d\d:\d\d:\d\d\] \[(.+?)?INFO\]: Whitelist is now turned on$")]
     internal bool WhiteListEnable(Match match) {
@@ -184,4 +159,29 @@ public class PluginMain : AMPPlugin {
         public string Name { get; init; }
         public string IP { get; init; }
     }
+    
+    // ----------------------------- ServerTypeUtils ----------------------------- 
+    
+    /// <summary>
+    /// Switch the server to a different modloader and/or version
+    /// </summary>
+    /// <param name="serverType">The server type or modloader to use</param>
+    /// <param name="minecraftVersion">The version of Minecraft to use</param>
+    /// <param name="deleteWorld">Delete the world folder when setting up the server</param>
+    /// <returns>An ActionResult</returns>
+    [ScheduleableTask("Switch the server to a different modloader and/or version.")]
+    // TODO: Make Server Type conversion system to replace references to MCConfig.ServerType
+    // Also would allow for custom server types (defined by meeee)
+    public ActionResult ScheduleSetServerInfo(
+        [ParameterDescription("The server type or modloader to use")] MCConfig.ServerType serverType,
+        [ParameterDescription("The version of Minecraft to use")] MinecraftVersion minecraftVersion,
+        [ParameterDescription("Delete the world folder when setting up the server")] NoYes deleteWorld = NoYes.No)
+        => ServerTypeUtils.SetServerInfo(serverType, minecraftVersion, deleteWorld == NoYes.Yes);
+        
+    /// <summary>
+    /// Set the server's modloader and version based on the server info queue
+    /// </summary>
+    /// <returns></returns>
+    [ScheduleableTask("Set the server's modloader and version based on the server info queue.")]
+    public ActionResult ScheduleProcessServerInfoQueue() => ServerTypeUtils.ProcessServerInfoQueue();
 }
