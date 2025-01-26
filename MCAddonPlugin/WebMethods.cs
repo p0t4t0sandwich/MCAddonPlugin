@@ -1,5 +1,8 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.ComponentModel;
+using System.Linq;
+using System.Threading.Tasks;
 using MCAddonPlugin.Submodules.ServerTypeUtils;
 using ModuleShared;
 using MinecraftModule;
@@ -20,7 +23,8 @@ internal class WebMethods : WebMethodsBase {
 
     public enum MCAddonPluginPermissions {
         SetServerInfo,
-        ManageServerInfoQueue
+        ManageServerInfoQueue,
+        ManageWhitelist
     }
     
     // ----------------------------- ServerTypeUtils ----------------------------- 
@@ -79,4 +83,37 @@ internal class WebMethods : WebMethodsBase {
     }
     
     // ----------------------------- Whitelist -----------------------------
+    [JSONMethod(
+        "Refresh the whitelist.",
+        "Nothing, but the task will be displayed in the task list.")]
+    [RequiresPermissions(MCAddonPluginPermissions.ManageWhitelist)]
+    public void RefreshWhitelist() {
+        _ = _plugin.Whitelist.RefreshWhitelist();
+    }
+    
+    [JSONMethod(
+        "Add a list of users to the whitelist.",
+        "Nothing, but the task will be displayed in the task list.")]
+    [RequiresPermissions(MCAddonPluginPermissions.ManageWhitelist)]
+    public void AddUsersToWhitelist([ParameterDescription("List of usernames")] List<string> users) {
+        _ = _plugin.Whitelist.AddUsersToWhitelist(users);
+    }
+    
+    [JSONMethod(
+        "Remove a list of users from the whitelist.",
+        "Nothing, but the task will be displayed in the task list.")]
+    [RequiresPermissions(MCAddonPluginPermissions.ManageWhitelist)]
+    public void RemoveUsersFromWhitelist([ParameterDescription("List of usernames")] List<string> users) {
+        _plugin.Whitelist.RemoveUsersFromWhitelist(users);
+    }
+    
+    [JSONMethod(
+        "Set the whitelist to a list of users.",
+        "Nothing, but the task will be displayed in the task list.")]
+    [RequiresPermissions(MCAddonPluginPermissions.ManageWhitelist)]
+    public void SetWhitelist(
+        [ParameterDescription("List of usernames, if null it falls back to the setting value")]
+        List<string> users = null) {
+        _ = _plugin.Whitelist.SetWhitelist(users);
+    }
 }

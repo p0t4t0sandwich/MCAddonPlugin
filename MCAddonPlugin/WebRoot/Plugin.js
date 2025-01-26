@@ -8,11 +8,13 @@ this.plugin = {
     SettingChanged: async function (node, value) {},
     AMPDataLoaded: function () {},
     PushedMessage: async function(source, message, data) {
+        if (source !== "MCAddonPlugin") return;
         switch (message) {
             case "setsettings":
                 suppressSettingUpdates = true;
                 // Get that sweet sweet instant visual feedback
                 for (const key in data) {
+                    console.log("Updating setting", key, "to", data[key]);
                     currentSettings[key].value(data[key]);
                 }
                 suppressSettingUpdates = false;

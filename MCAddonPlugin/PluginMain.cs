@@ -1,8 +1,10 @@
 ﻿using System;
 using ModuleShared;
 using System.Collections.Generic;
+using System.Linq;
 using System.Reflection;
 using System.Text.RegularExpressions;
+using System.Threading.Tasks;
 using FileManagerPlugin;
 using GSMyAdmin.WebServer;
 using MCAddonPlugin.Submodules.Management;
@@ -64,6 +66,7 @@ public class PluginMain : AMPPlugin {
     }
     
     /// <summary>
+    /// TODO: Bug Mike and/or James to make this a feature
     /// A utility method that sets settings via the Core module and updates them in the UI (assuming there's a connected UI)
     /// </summary>
     /// <param name="settings">A Dictionary of settings, in the format of settings["Some.Setting.Node"] = someObject</param>
@@ -77,6 +80,78 @@ public class PluginMain : AMPPlugin {
             Core.SetConfig(kvp.Key, configs[kvp.Key]);
         }
         _message.Push("setsettings", settings);
+    }
+    
+    /// <summary>
+    /// TODO: Bug Mike and/or James to make this a feature
+    /// Get a setting via the Core module
+    /// </summary>
+    /// <param name="setting"></param>
+    /// <returns></returns>
+    public  T GetSetting<T>(string setting) => (T) Core.GetConfig(setting).CurrentValue;
+
+    /// <summary>
+    /// TODO: Bug Mike and/or James to make this a feature
+    /// Register message handlers from the plugin to the actual application
+    /// </summary>
+    /// <param name="app"></param>
+    /// <param name="registrant"></param>
+    public void RegisterMessageHandlers(IApplicationWrapper app, object registrant) {
+        if (app is not AppServerBase) {
+            _log.Debug("Failed to register message handlers: AppServerBase not found");
+            return;
+        }
+        // Reflection time
+        var messageHandlersField = app.GetType().GetField("MessageHandlers", BindingFlags.NonPublic | BindingFlags.Instance);
+        if (messageHandlersField == null) {
+            _log.Debug("Failed to get MessageHandlers field from AppServerBase");
+            return;
+        }
+        var messageHandlers = (Dictionary<Regex, AppServerBase.MessageHandlingDelegate>) messageHandlersField.GetValue(app);
+        if (messageHandlers == null) {
+            _log.Debug("Failed to get MessageHandlers from AppServerBase");
+            return;
+        }
+        var asyncMessageHandlersField = app.GetType().GetField("AsyncMessageHandlers", BindingFlags.NonPublic | BindingFlags.Instance);
+        if (asyncMessageHandlersField == null) {
+            _log.Debug("Failed to get AsyncMessageHandlers field from AppServerBase");
+            return;
+        }
+        var asyncMessageHandlers = (Dictionary<Regex, AppServerBase.MessageHandlingDelegateAsync>) asyncMessageHandlersField.GetValue(app);
+        if (asyncMessageHandlers == null) {
+            _log.Debug("Failed to get AsyncMessageHandlers from AppServerBase");
+            return;
+        }
+        
+        var methodData = registrant.GetType()
+            .GetMethods(BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)
+            .Where(m => m.GetCustomAttributes<MessageHandlerAttribute>().Any())
+            .Select(m => new { 
+                method = m, 
+                attribs = m.GetCustomAttributes<MessageHandlerAttribute>()
+            })
+            .OrderBy(p => { 
+                MessageHandlerAttribute handlerAttribute = p.attribs.FirstOrDefault(); 
+                return handlerAttribute?.Priority ?? 0;
+            });
+        
+        foreach (var data in methodData) { 
+            ParameterInfo[] parameters = data.method.GetParameters();
+            if (parameters.Length == 1 && parameters[0].ParameterType == typeof (Match)) {
+                if (data.method.ReturnType == typeof (Task<bool>)) {
+                    _log.Debug("Registering async message handler: " + data.method.Name);
+                    AppServerBase.MessageHandlingDelegateAsync handlingDelegateAsync = data.method.CreateDelegate<AppServerBase.MessageHandlingDelegateAsync>(registrant);
+                    foreach (MessageHandlerAttribute attrib in data.attribs)
+                        asyncMessageHandlers.Add(attrib.Expression, handlingDelegateAsync);
+                }
+                else if (data.method.ReturnType == typeof (bool)) {
+                    _log.Debug("Registering sync message handler: " + data.method.Name);
+                    AppServerBase.MessageHandlingDelegate handlingDelegate = data.method.CreateDelegate<AppServerBase.MessageHandlingDelegate>(registrant);
+                    foreach (MessageHandlerAttribute attrib in data.attribs)
+                        messageHandlers.Add(attrib.Expression, handlingDelegate);
+                }
+            }
+        }
     }
     
     public PluginMain(ILogger log, IConfigSerializer config, IPlatformInfo platform,
@@ -96,16 +171,20 @@ public class PluginMain : AMPPlugin {
         _app = Application;
     }
 
+    public override bool HasFrontendContent => true;
+    
     public override void Init(out WebMethodsBase APIMethods) {
         APIMethods = new WebMethods(this, _settings, _log);
     }
     
     public override void PostInit() {
         _fileManager = (IVirtualFileService)_features.RequestFeature<IWSTransferHandler>();
+        
         // Load MinecraftModule specific features
         if (_app.GetType().FullName == "MinecraftModule.MinecraftApp") {
             _log.Debug("MinecraftModule is loaded");
-            Whitelist = new Whitelist(this, _app, _settings, _log, _fileManager);
+            Whitelist = new Whitelist(this, _app, _settings, _log, _tasks, _fileManager);
+            RegisterMessageHandlers(_app, Whitelist);
             ServerTypeUtils = new ServerTypeUtils(this, _app, _settings, _log, _fileManager);
         }
     }
@@ -117,9 +196,7 @@ public class PluginMain : AMPPlugin {
     /// </summary>
     /// <param name="sender">Event sender</param>
     /// <param name="e">SettingModifiedEvent arguments and info</param>
-    private void Settings_SettingModified(object sender, SettingModifiedEventArgs e) {
-        Whitelist.Settings_SettingModified(e);
-    }
+    private void Settings_SettingModified(object sender, SettingModifiedEventArgs e) { }
 
     /// <summary>
     /// Simple T/F enum that defaults to false
@@ -131,31 +208,17 @@ public class PluginMain : AMPPlugin {
 
     // ----------------------------- Management - Whitelist -----------------------------
     
-    [MessageHandler(@"^\[\d\d:\d\d:\d\d\] \[(.+?)?INFO\]: Whitelist is now turned on$")]
-    internal bool WhiteListEnable(Match match) {
-        _settings.Whitelist.Enabled = true;
-        return false;
-    }
-    
-    [MessageHandler(@"^\[\d\d:\d\d:\d\d\] \[(.+?)?INFO\]: Whitelist is now turned off$")]
-    internal bool WhiteListDisable(Match match) {
-        _settings.Whitelist.Enabled = false;
-        return false;
-    }
-    
-    [MessageHandler(@"^\[\d\d:\d\d:\d\d\] \[(.+?)?INFO\]: (\w+) \(/\b((?:\d{1,3}\.){3}\d{1,3})\b:\d{5}\) lost connection: You are not white-listed on this server!$")]
-    internal bool WhiteListKick(Match match) {
-        PlayerNotWhitelisted?.Invoke(this, new PlayerNotWhitelistedEventArgs {
-            Name = match.Groups[2].Value,
-            IP = match.Groups[3].Value
+    internal void FireUserNotWhitelisted(string name, string ip) {
+        UserNotWhitelisted?.Invoke(this, new UserNotWhitelistedEventArgs {
+            Name = name,
+            IP = ip
         });
-        return false;
     }
     
-    [ScheduleableEvent("A player tries to join the server but is not whitelisted")]
-    public event EventHandler<PlayerNotWhitelistedEventArgs> PlayerNotWhitelisted;
+    [ScheduleableEvent("A user tries to join the server and is not whitelisted")]
+    public event EventHandler<UserNotWhitelistedEventArgs> UserNotWhitelisted;
     
-    public class PlayerNotWhitelistedEventArgs : EventArgs {
+    public class UserNotWhitelistedEventArgs : EventArgs {
         public string Name { get; init; }
         public string IP { get; init; }
     }
