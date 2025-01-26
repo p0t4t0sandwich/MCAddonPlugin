@@ -29,6 +29,8 @@ public class PluginMain : AMPPlugin {
     private readonly IApplicationWrapper _app;
     
     public ServerTypeUtils ServerTypeUtils { get; private set; }
+    public UserCache UserCache { get; private set; }
+    public OpList OpList { get; private set; }
     public Whitelist Whitelist { get; private set; }
     
     // Reflection my beloved
@@ -183,7 +185,9 @@ public class PluginMain : AMPPlugin {
         // Load MinecraftModule specific features
         if (_app.GetType().FullName == "MinecraftModule.MinecraftApp") {
             _log.Debug("MinecraftModule is loaded");
-            Whitelist = new Whitelist(this, _app, _settings, _log, _tasks, _fileManager);
+            UserCache = new UserCache(_app, _log, _fileManager);
+            OpList = new OpList(this, _app, _settings, UserCache, _log, _tasks, _fileManager);
+            Whitelist = new Whitelist(this, _app, _settings, UserCache, _log, _tasks, _fileManager);
             RegisterMessageHandlers(_app, Whitelist);
             ServerTypeUtils = new ServerTypeUtils(this, _app, _settings, _log, _fileManager);
         }

@@ -1,7 +1,5 @@
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
-using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
@@ -15,18 +13,24 @@ namespace MCAddonPlugin.Submodules.Management;
 public partial class Whitelist {
     private readonly PluginMain _plugin;
     private readonly IApplicationWrapper _app;
+    private readonly IHasWriteableConsole _console;
     private readonly Settings _settings;
+    private readonly UserCache _cache;
     private readonly ILogger _log;
-    private IRunningTasksManager _tasks;
+    private readonly IRunningTasksManager _tasks;
     private readonly IVirtualFileService _fileManager;
+    private const string _whitelistFile = "whitelist.json";
     private List<SimpleUser> _whitelist;
 
-    public Whitelist(PluginMain plugin, IApplicationWrapper app, Settings settings, ILogger log, IRunningTasksManager tasks, IVirtualFileService fileManager) {
+    public Whitelist(PluginMain plugin, IApplicationWrapper app, Settings settings, UserCache cache,
+        ILogger log, IRunningTasksManager tasks, IVirtualFileService fileManager) { 
         _plugin = plugin;
         _app = app;
+        _console = app as IHasWriteableConsole;
         _settings = settings;
         _settings.SettingModified += Settings_SettingModified;
-        ((MinecraftApp) _app).Module.Settings.SettingModified += Settings_SettingModified;
+        (_app as MinecraftApp)!.Module.Settings.SettingModified += Settings_SettingModified;
+        _cache = cache;
         _log = log;
         _tasks = tasks;
         _fileManager = fileManager;
@@ -38,6 +42,24 @@ public partial class Whitelist {
         mcm_whitelist = mca_whitelist;
         
         _log.MessageLogged += Whitelist_MessageLogged;
+    }
+    
+    /// <summary>
+    /// A class representing a whitelist entry
+    /// </summary>
+    /// <param name="name">User name</param>
+    /// <param name="uuid">User UUID</param>
+    public class WhitelistEntry(string name, string uuid) {
+        public readonly string name = name;
+        public readonly string uuid = uuid;
+    }
+    
+    /// <summary>
+    /// Get the names of users on the whitelist
+    /// </summary>
+    /// <returns>A list of usernames</returns>
+    public List<string> GetWhitelistNames() {
+        return _whitelist.Select(whitelistEntry => whitelistEntry.Name).ToList();
     }
     
     // This bastard implementation to get around regex priority
@@ -84,22 +106,22 @@ public partial class Whitelist {
     /// </summary>
     /// <returns>A list of whitelist entries</returns>
     public async Task<List<SimpleUser>> ReadWhitelistJSON() {
-        var whitelistFile = _fileManager.GetFile("whitelist.json");
+        var whitelistFile = _fileManager.GetFile(_whitelistFile);
         if (whitelistFile == null) {
             _log.Debug("Failed to get whitelist.json");
             return [];
         }
         
         var reader = whitelistFile.OpenText();
-        var whitelistJson = await reader.ReadToEndAsync();
+        var json = await reader.ReadToEndAsync();
         reader.Close();
         
-        _log.Debug("Whitelist: " + whitelistJson);
+        _log.Debug("Whitelist: " + json);
         List<WhitelistEntry> whitelist;
         try {
-            whitelist = JsonConvert.DeserializeObject<List<WhitelistEntry>>(whitelistJson);
+            whitelist = JsonConvert.DeserializeObject<List<WhitelistEntry>>(json);
         } catch (Exception e) {
-            _log.Info("Failed to parse whitelist.json" + e);
+            _log.Error("Failed to parse whitelist.json" + e);
             return [];
         }
         _log.Info("Whitelist loaded");
@@ -114,8 +136,8 @@ public partial class Whitelist {
     /// </summary>
     /// <param name="whitelist">The list of whitelist entries</param>
     public async Task WriteWhitelistJSON(List<SimpleUser> whitelist) {
-        var whitelistFile = _fileManager.GetFile("whitelist.json");
-        if (whitelistFile == null) {
+        var file = _fileManager.GetFile(_whitelistFile);
+        if (file == null) {
             _log.Debug("Failed to get whitelist.json");
             return;
         }
@@ -123,13 +145,10 @@ public partial class Whitelist {
         // Convert SimpleUser objects to WhitelistEntry objects
         var converted = whitelist.Select(user => new WhitelistEntry(user.Name, user.Id));
         
-        var stream = whitelistFile.OpenWrite();
-        stream.SetLength(0);
-        var writer = new StreamWriter(stream);
+        var writer = file.CreateText();
         var json = JsonConvert.SerializeObject(converted);
         await writer.WriteAsync(json);
         writer.Close();
-        stream.Close();
         
         _log.Info("Whitelist saved");
         _log.Debug("Whitelist: " + json);
@@ -141,7 +160,7 @@ public partial class Whitelist {
     public void ReloadSettings() {
         // Send the `/whitelist reload` command
         if (_app.State == ApplicationState.Ready) {
-            ((IHasWriteableConsole) _app).WriteLine("whitelist reload");
+            _console.WriteLine("whitelist reload");
         }
         
         // Send setting updates to the UI
@@ -179,7 +198,7 @@ public partial class Whitelist {
         }
         AddUsersToWhitelistTask = _tasks.CreateTask("AddUsersToWhitelist", "Adding users to whitelist...");
         
-        _whitelist.AddRange(await Utils.LookupUsers(_log, users, _settings.Whitelist.GeyserPrefix));
+        _whitelist.AddRange(await _cache.LookupUsers(users, _settings.Whitelist.GeyserPrefix));
         await WriteWhitelistJSON(_whitelist);
         ReloadSettings();
         
@@ -219,30 +238,12 @@ public partial class Whitelist {
             SetWhitelistTask = null;
             return;
         }
-        _whitelist = await Utils.LookupUsers(_log, users, _settings.Whitelist.GeyserPrefix);
+        _whitelist = await _cache.LookupUsers(users, _settings.Whitelist.GeyserPrefix);
         await WriteWhitelistJSON(_whitelist);
         ReloadSettings();
         
         SetWhitelistTask.End();
         SetWhitelistTask = null;
-    }
-    
-    /// <summary>
-    /// A class representing a whitelist entry
-    /// </summary>
-    /// <param name="name">User name</param>
-    /// <param name="uuid">User UUID</param>
-    public class WhitelistEntry(string name, string uuid) {
-        public readonly string name = name;
-        public readonly string uuid = uuid;
-    }
-    
-    /// <summary>
-    /// Get the names of users on the whitelist
-    /// </summary>
-    /// <returns>A list of usernames</returns>
-    public List<string> GetWhitelistNames() {
-        return _whitelist.Select(whitelistEntry => whitelistEntry.Name).ToList();
     }
     
     // ----------------------------- Message Handlers ----------------------------- 
@@ -272,6 +273,29 @@ public partial class Whitelist {
     internal bool WhiteListKick(Match match) {
         _log.Debug("User not whitelisted: " + match.Groups[2].Value);
         _plugin.FireUserNotWhitelisted(match.Groups[2].Value, match.Groups[3].Value);
+        return false;
+    }
+    
+    [MessageHandler(@"^\[\d\d:\d\d:\d\d\] \[(.+?)?INFO\]: Added (\w+) to the whitelist$")]
+    internal bool WhiteListAdd(Match match) {
+        var username = match.Groups[2].Value;
+        var prefix = _settings.Whitelist.GeyserPrefix;
+        _log.Debug("User added to whitelist: " + username);
+        
+        // Should be quick, as the user is will already in the cache
+        _cache.RefreshUserCache().Wait();
+        var user = _cache.LookupUsers([ username, prefix + username ], prefix).Result.FirstOrDefault();
+        if (user != null) {
+            _whitelist.Add(user);
+            ReloadSettings();
+        }
+        return false;
+    }
+    
+    [MessageHandler(@"^\[\d\d:\d\d:\d\d\] \[(.+?)?INFO\]: Removed (\w+) from the whitelist$")]
+    internal bool WhiteListRemove(Match match) {
+        _log.Debug("User removed from whitelist: " + match.Groups[2].Value);
+        _whitelist.RemoveAll(entry => entry.Name == match.Groups[2].Value);
         return false;
     }
 }
