@@ -192,7 +192,7 @@ public partial class Whitelist {
     /// Add a player (or list of players) to the whitelist
     /// </summary>
     /// <param name="users">List of player names</param>
-    public async Task AddUsersToWhitelist(List<string> users) {
+    public async Task AddUsersToWhitelistByName(List<string> users) {
         if (AddUsersToWhitelistTask != null) {
             return;
         }
@@ -206,11 +206,25 @@ public partial class Whitelist {
         AddUsersToWhitelistTask = null;
     }
     
+    public async Task AddUsersToWhitelistByID(List<string> ids) {
+        if (AddUsersToWhitelistTask != null) {
+            return;
+        }
+        AddUsersToWhitelistTask = _tasks.CreateTask("AddUsersToWhitelist", "Adding users to whitelist...");
+        
+        // _whitelist.AddRange(await _cache.LookupUsers(ids));
+        await WriteWhitelistJSON(_whitelist);
+        ReloadSettings();
+        
+        AddUsersToWhitelistTask.End();
+        AddUsersToWhitelistTask = null;
+    }
+    
     /// <summary>
     /// Remove a user from the whitelist
     /// </summary>
     /// <param name="users">List of usernames</param>
-    public void RemoveUsersFromWhitelist(List<string> users) {
+    public void RemoveUsersFromWhitelistByName(List<string> users) {
         // Remove the user from the whitelist
         _whitelist.RemoveAll(entry => users.Contains(entry.Name));
         WriteWhitelistJSON(_whitelist).Wait(); // In theory this should be quick

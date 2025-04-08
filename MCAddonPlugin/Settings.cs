@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
-// using System.Configuration;
+using System.Configuration;
 using MCAddonPlugin.Submodules.ServerTypeUtils;
 using MinecraftModule;
 using ModuleShared;
@@ -13,9 +13,7 @@ public class Settings : SettingStore {
     public ServerTypeUtilsSettings ServerTypeUtils = new();
     public WhitelistSettings Whitelist = new();
     
-    [Description("MCAddon")]
-    // [SettingsGroupName("Server Type Utils:dns")]
-    [Serializable]
+    [Description("MCAddon"), SettingsGroupName("Server Type Utils:dns"), Serializable]
     public class ServerTypeUtilsSettings : SettingSectionStore {
         [WebSetting("Server Type", "The server type or modloader to use", false)]
         [InlineAction("MCAddonPlugin", "SetServerInfo", "Setup Server")]
@@ -28,9 +26,7 @@ public class Settings : SettingStore {
         public bool DelWorldFolder = false;
     }
     
-    [Description("MCAddon")]
-    // [SettingsGroupName("Whitelist:joystick")]
-    [Serializable]
+    [Description("MCAddon"), SettingsGroupName("Whitelist:joystick"), Serializable]
     public class WhitelistSettings : SettingSectionStore {
         [WebSetting("Whitelist Enabled", "Enable the whitelist", false)]
         public bool Enabled = false;

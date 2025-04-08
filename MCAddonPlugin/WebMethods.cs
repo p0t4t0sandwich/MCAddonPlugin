@@ -31,8 +31,8 @@ internal class WebMethods : WebMethodsBase {
 
     [JSONMethod(
         "Switch the server to a different modloader or different version of Minecraft.",
-        "An ActionResult indicating the success or failure of the operation.")]
-    [RequiresPermissions(MCAddonPluginPermissions.SetServerInfo)]
+        "An ActionResult indicating the success or failure of the operation."),
+     RequiresPermissions(MCAddonPluginPermissions.SetServerInfo)]
     public ActionResult SetServerInfo(string serverType = "", string minecraftVersion = "", bool deleteWorld = false) {
         // Parse the platform and use the ServerType enum
         MCConfig.ServerType parsedType;
@@ -58,8 +58,8 @@ internal class WebMethods : WebMethodsBase {
 
     [JSONMethod(
         "Add server info to the queue.",
-        "An ActionResult indicating the success or failure of the operation.")]
-    [RequiresPermissions(MCAddonPluginPermissions.ManageServerInfoQueue)]
+        "An ActionResult indicating the success or failure of the operation."),
+     RequiresPermissions(MCAddonPluginPermissions.ManageServerInfoQueue)]
     public ActionResult AddServerInfoToQueue(string serverType = "", string minecraftVersion = "", bool deleteWorld = false) {
         // Parse the platform and use the ServerType enum
         Enum.TryParse(serverType, true, out MCConfig.ServerType parsedType);
@@ -76,8 +76,8 @@ internal class WebMethods : WebMethodsBase {
 
     [JSONMethod(
         "Process the server info queue.",
-        "An ActionResult indicating the success or failure of the operation.")]
-    [RequiresPermissions(MCAddonPluginPermissions.ManageServerInfoQueue)]
+        "An ActionResult indicating the success or failure of the operation."),
+     RequiresPermissions(MCAddonPluginPermissions.ManageServerInfoQueue)]
     public ActionResult ProcessServerInfoQueue() {
         return _plugin.ServerTypeUtils.ProcessServerInfoQueue();
     }
@@ -85,35 +85,37 @@ internal class WebMethods : WebMethodsBase {
     // ----------------------------- Whitelist -----------------------------
     [JSONMethod(
         "Refresh the whitelist.",
-        "Nothing, but the task will be displayed in the task list.")]
-    [RequiresPermissions(MCAddonPluginPermissions.ManageWhitelist)]
+        "Nothing, but the task will be displayed in the task list."),
+     RequiresPermissions(MCAddonPluginPermissions.ManageWhitelist)]
     public void RefreshWhitelist() {
         _ = _plugin.Whitelist.RefreshWhitelist();
     }
     
     [JSONMethod(
         "Add a list of users to the whitelist.",
-        "Nothing, but the task will be displayed in the task list.")]
-    [RequiresPermissions(MCAddonPluginPermissions.ManageWhitelist)]
-    public void AddUsersToWhitelist([ParameterDescription("List of usernames")] List<string> users) {
-        _ = _plugin.Whitelist.AddUsersToWhitelist(users);
+        "Nothing, but the task will be displayed in the task list."),
+     RequiresPermissions(MCAddonPluginPermissions.ManageWhitelist)]
+    public void AddUsersToWhitelistByName([ParameterDescription("List of usernames")] List<string> users) {
+        _ = _plugin.Whitelist.AddUsersToWhitelistByName(users);
     }
     
     [JSONMethod(
         "Remove a list of users from the whitelist.",
-        "Nothing, but the task will be displayed in the task list.")]
-    [RequiresPermissions(MCAddonPluginPermissions.ManageWhitelist)]
-    public void RemoveUsersFromWhitelist([ParameterDescription("List of usernames")] List<string> users) {
-        _plugin.Whitelist.RemoveUsersFromWhitelist(users);
+        "Nothing, but the task will be displayed in the task list."),
+     RequiresPermissions(MCAddonPluginPermissions.ManageWhitelist)]
+    public void RemoveUsersFromWhitelistByName([ParameterDescription("List of usernames")] List<string> users) {
+        _plugin.Whitelist.RemoveUsersFromWhitelistByName(users);
     }
     
     [JSONMethod(
         "Set the whitelist to a list of users.",
-        "Nothing, but the task will be displayed in the task list.")]
-    [RequiresPermissions(MCAddonPluginPermissions.ManageWhitelist)]
+        "Nothing, but the task will be displayed in the task list."),
+     RequiresPermissions(MCAddonPluginPermissions.ManageWhitelist)]
     public void SetWhitelist(
         [ParameterDescription("List of usernames, if null it falls back to the setting value")]
         List<string> users = null) {
         _ = _plugin.Whitelist.SetWhitelist(users);
     }
+    
+    // ----------------------------- UserCache -----------------------------
 }

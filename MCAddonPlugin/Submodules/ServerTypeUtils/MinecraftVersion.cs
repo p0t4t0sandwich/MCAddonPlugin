@@ -81,5 +81,7 @@ public enum MinecraftVersion {
     [EnumDisplayName("1.21.3")]
     V1_21_3 = 1213,
     [EnumDisplayName("1.21.4")]
-    V1_21_4 = 1214
+    V1_21_4 = 1214,
+    [EnumDisplayName("1.21.5")]
+    V1_21_5 = 1215
 }

@@ -226,6 +226,7 @@ public class ServerTypeUtils {
             case MinecraftVersion.V1_21_2:
             case MinecraftVersion.V1_21_3:
             case MinecraftVersion.V1_21_4:
+            case MinecraftVersion.V1_21_5:
             default:
                 // Java 21
                 foreach (var keyValuePair in javaVersions.Where(vkp => vkp.Key.Contains("-21-")))

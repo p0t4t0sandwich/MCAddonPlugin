@@ -58,26 +58,26 @@
     <CodeAnalysisRuleSet>MinimumRecommendedRules.ruleset</CodeAnalysisRuleSet>
   </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="System.Configuration.ConfigurationManager" Version="9.0.0" />
+    <PackageReference Include="System.Configuration.ConfigurationManager" Version="8.0.0" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="ModuleShared">
-      <HintPath>../../../AMP/Mainline/20241120.1/AMP_x86_64/ModuleShared.dll</HintPath>
+      <HintPath>../../../AMP/Mainline/20250325.1/AMP_x86_64/ModuleShared.dll</HintPath>
       <Private>true</Private>
     </Reference>
     <Reference Include="AMP">
-      <HintPath>../../../AMP/Mainline/20241120.1/AMP_x86_64/AMP.dll</HintPath>
+      <HintPath>../../../AMP/Mainline/20250325.1/AMP_x86_64/AMP.dll</HintPath>
     </Reference>
     <Reference Include="Newtonsoft.Json">
-      <HintPath>../../../AMP/Mainline/20241120.1/AMP_x86_64/Newtonsoft.Json.dll</HintPath>
+      <HintPath>../../../AMP/Mainline/20250325.1/AMP_x86_64/Newtonsoft.Json.dll</HintPath>
       <Private>true</Private>
     </Reference>
     <Reference Include="FileManagerPlugin">
-      <HintPath>../../../AMP/Mainline/20241120.1/AMP_x86_64/Plugins/FileManagerPlugin/FileManagerPlugin.dll</HintPath>
+      <HintPath>../../../AMP/Mainline/20250325.1/AMP_x86_64/Plugins/FileManagerPlugin/FileManagerPlugin.dll</HintPath>
       <Private>true</Private>
     </Reference>
     <Reference Include="MinecraftModule">
-      <HintPath>../../../AMP/Mainline/20241120.1/AMP_x86_64/Plugins/MinecraftModule/MinecraftModule.dll</HintPath>
+      <HintPath>../../../AMP/Mainline/20250325.1/AMP_x86_64/Plugins/MinecraftModule/MinecraftModule.dll</HintPath>
       <Private>true</Private>
     </Reference>
   </ItemGroup>
