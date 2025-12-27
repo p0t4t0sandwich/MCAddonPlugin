@@ -193,7 +193,7 @@ public class PluginMain : AMPPlugin {
         }
     }
 
-    public override IEnumerable<SettingStore> SettingStores => Utilities.EnumerableFrom(_settings);
+    public override IEnumerable<SettingStore> SettingStores => [_settings];
 
     /// <summary>
     /// Listen to setting changes and fire off internal events
